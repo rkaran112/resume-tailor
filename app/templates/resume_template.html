@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>{{ contact.name }} — Resume</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 0.55in 0.65in;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.4;
+    color: #1a1a1a;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 20pt;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .contact-line {
+    font-size: 9.5pt;
+    color: #333;
+  }
+
+  .contact-line span:not(:last-child)::after {
+    content: "  \2022  ";
+    color: #888;
+  }
+
+  .contact-line a {
+    color: #1a1a1a;
+    text-decoration: none;
+  }
+
+  section {
+    margin-bottom: 12px;
+  }
+
+  section h2 {
+    font-size: 11.5pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 2px;
+    margin: 0 0 6px;
+  }
+
+  .entry {
+    margin-bottom: 8px;
+  }
+
+  .entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .entry-title {
+    font-weight: 700;
+  }
+
+  .entry-subtitle {
+    font-style: italic;
+  }
+
+  .entry-dates {
+    white-space: nowrap;
+    font-size: 9.5pt;
+    color: #333;
+  }
+
+  ul.bullets {
+    margin: 3px 0 0;
+    padding-left: 18px;
+  }
+
+  ul.bullets li {
+    margin-bottom: 2px;
+  }
+
+  .skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .skills-row .skills-category {
+    font-weight: 700;
+  }
+
+  .tech-tags {
+    font-size: 9.5pt;
+    font-style: italic;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>{{ contact.name }}</h1>
+    <div class="contact-line">
+      {% if contact.location %}<span>{{ contact.location }}</span>{% endif %}
+      {% if contact.email %}<span>{{ contact.email }}</span>{% endif %}
+      {% if contact.phone %}<span>{{ contact.phone }}</span>{% endif %}
+      {% for link in contact.links %}
+        <span><a href="{{ link.url }}">{{ link.label }}</a></span>
+      {% endfor %}
+    </div>
+  </header>
+
+  {% if experience %}
+  <section>
+    <h2>Experience</h2>
+    {% for entry in experience %}
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-title">{{ entry.company }} — <span class="entry-subtitle">{{ entry.title }}</span></span>
+        <span class="entry-dates">{{ entry.start_date }} – {{ entry.end_date or "Present" }}</span>
+      </div>
+      <div>{{ entry.location }}</div>
+      {% if entry.bullets %}
+      <ul class="bullets">
+        {% for bullet in entry.bullets %}
+        <li>{{ bullet }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if projects %}
+  <section>
+    <h2>Projects</h2>
+    {% for project in projects %}
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-title">{{ project.name }}</span>
+        {% if project.link %}<span class="entry-dates">{{ project.link }}</span>{% endif %}
+      </div>
+      <div>{{ project.description }}</div>
+      {% if project.tech_tags %}
+      <div class="tech-tags">{{ project.tech_tags | join(", ") }}</div>
+      {% endif %}
+      {% if project.bullets %}
+      <ul class="bullets">
+        {% for bullet in project.bullets %}
+        <li>{{ bullet }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if skills %}
+  <section>
+    <h2>Skills</h2>
+    <div class="skills-list">
+      {% for group in skills %}
+      <div class="skills-row"><span class="skills-category">{{ group.category }}:</span> {{ group.names | join(", ") }}</div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if education %}
+  <section>
+    <h2>Education</h2>
+    {% for entry in education %}
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-title">{{ entry.institution }} — <span class="entry-subtitle">{{ entry.degree }}, {{ entry.field }}</span></span>
+        <span class="entry-dates">{{ entry.start_date }} – {{ entry.end_date or "Present" }}</span>
+      </div>
+      {% if entry.gpa %}<div>GPA: {{ entry.gpa }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+</body>
+</html>
