@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     generated_resumes_dir: str = "generated/resumes"
     enable_llm_enhance: bool = False
     enable_cover_letter: bool = False
+    enable_resume_import: bool = False
 
 
 @lru_cache

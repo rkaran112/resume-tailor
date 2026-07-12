@@ -9,9 +9,9 @@ a per-resume basis.
 
 See `docs/DESIGN.md` for the full design and build-order roadmap.
 
-Status: all 7 slices are implemented (bank CRUD, PDF rendering, matching engine, tailoring +
+Status: all 8 slices are implemented (bank CRUD, PDF rendering, matching engine, tailoring +
 finalize/export, application tracker, opt-in LLM bullet enhancement, opt-in cover letter
-generation). See `docs/DESIGN.md` for the full build history.
+generation, opt-in resume import). See `docs/DESIGN.md` for the full build history.
 
 ## Setup
 
@@ -48,3 +48,14 @@ Set `ENABLE_COVER_LETTER=true` and an `ANTHROPIC_API_KEY` (or run `ant auth logi
 `POST /cover-letters`. Off by default — the app works fully with no API key. Generation is
 grounded strictly in the tailored resume's already-selected content (never the full bank) and
 the job description.
+
+## Resume import (opt-in)
+
+Set `ENABLE_RESUME_IMPORT=true` and an `ANTHROPIC_API_KEY` (or run `ant auth login`) to turn on
+`POST /bank/import`. Off by default — the app works fully with no API key, and bank data can
+always be entered manually via the Bank tab. Drop a PDF resume onto the "Import from resume"
+panel to extract contact info, experience, skills, projects, and education into a reviewable
+preview — nothing is written to the bank until you uncheck anything you don't want and click
+"Add to bank". PDF only; extraction is grounded strictly in the document (no invented
+employers/dates/skills), and importing the same resume twice creates duplicate rows (no
+merge/dedup) — delete extras via the Bank tab if that happens.

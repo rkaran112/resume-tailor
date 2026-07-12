@@ -149,7 +149,6 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
 - Multi-user auth (single-user personal tool — no login, no JWT/refresh-token machinery)
 - Multiple/editable resume or cover-letter templates (one fixed template each; template changes
   = code changes)
-- Resume parsing from existing PDF/Word files (bank is populated manually)
 - Application-funnel analytics/charts (V2, once there's real data)
 - Real-time collaboration/sharing
 - Cascading re-tailoring when the master bank changes after a resume is finalized (snapshots
@@ -218,7 +217,33 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    path — this sandbox has no `ANTHROPIC_API_KEY`, so the live call path is implemented and
    structurally tested but not exercised against the real API.
 
-All 7 slices of the resume-tailor V1 build are now complete.
+8. **Resume import + recommendation UI polish** (done). Manual bank entry was the biggest
+   friction point in actually using the tool, and the matching engine's picks (Slice 3) weren't
+   visually distinct from the rest of the bank in the review screen — this slice addresses both.
+   `app/services/resume_import.py` (`claude-opus-4-8`, adaptive thinking, structured JSON
+   output) sends the uploaded PDF directly to Claude as an inline-base64 `document` content
+   block (no PDF-parsing dependency needed) and extracts contact info, experience entries with
+   nested bullets, skills, projects, and education, grounded strictly in what's on the page
+   (never invents employers/dates/titles/metrics not present) — PDF only, DOCX/Word import
+   remains out of scope. `app/api/routes/resume_import.py`: `POST /bank/import` (gated behind
+   `ENABLE_RESUME_IMPORT`, default `false`, 503 when off) returns a `ResumeImportPreview` —
+   nothing is written to the bank yet. `POST /bank/import/commit` takes the
+   (possibly user-edited/deselected) preview and writes rows via the same plain-CRUD pattern as
+   `bank.py`; every extracted item carries an `include` flag the frontend toggles per-row, and
+   the commit route only writes checked items. Commit always appends new bank rows (except
+   `ContactInfo`, the existing singleton upsert) — no merge/dedup against existing bank data.
+   Frontend `ResumeImportPanel` (plain HTML5 drag-and-drop, no new dependency): drop a PDF →
+   review every extracted bullet/skill/project/education entry with a checkbox → "Add to bank".
+   Separately, `SelectionReview.tsx` now sorts JD-matched bullets/skills/projects to the top of
+   each section with a green "Recommended" pill (collapsing the rest of the bank behind a
+   "Show all" `<details>`), making the Slice 3 matching engine's picks visually obvious instead
+   of blending into a flat list. Verified via unit tests against a fake Anthropic client (no
+   real API calls) plus a route test suite (`tests/test_resume_import.py`, including a
+   mocked-extraction → commit → row-count round trip) plus an end-to-end browser check of the
+   disabled-by-default path — this sandbox has no `ANTHROPIC_API_KEY`, so the live extraction
+   call is implemented and structurally tested but not exercised against the real API.
+
+All 8 slices of the resume-tailor V1 build are now complete.
 
 Standing quality gate across every slice: `ruff check .` + `mypy app` + `uv run pytest` (real
 Postgres via docker-compose) — set up in `.github/workflows/ci.yml` from Slice 1, not
@@ -242,3 +267,9 @@ retrofitted later.
   claim traces back to the resume content; edit, finalize, download, confirm filename and
   application-detail linking. (Verified structurally, per the note above — no real API key in
   this sandbox to exercise live generation end-to-end in the browser.)
+- **Slice 8**: drop a real resume PDF onto the import panel, confirm every extracted field
+  traces back to the actual document (no invented employers/dates/skills), uncheck a few items,
+  commit, confirm only the checked rows landed in the bank; separately, run a JD match and
+  confirm the "Recommended" items visually match what `scoring_metadata` selected. (Import
+  itself verified structurally, per the note above — no real API key in this sandbox; the
+  recommendation UI polish needs no API key and was checked live in the browser.)

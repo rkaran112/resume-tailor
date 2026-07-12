@@ -8,6 +8,7 @@ import { ExperienceForm } from '../components/bank/ExperienceForm'
 import { ExperienceList } from '../components/bank/ExperienceList'
 import { ProjectForm } from '../components/bank/ProjectForm'
 import { ProjectList } from '../components/bank/ProjectList'
+import { ResumeImportPanel } from '../components/bank/ResumeImportPanel'
 import { SkillForm } from '../components/bank/SkillForm'
 import { SkillList } from '../components/bank/SkillList'
 
@@ -27,6 +28,7 @@ export function BankPage() {
   return (
     <div>
       <h1>Resume Tailor — Bank</h1>
+      <ResumeImportPanel />
       <nav>
         {TABS.map((t) => (
           <button key={t} aria-current={tab === t} onClick={() => setTab(t)}>

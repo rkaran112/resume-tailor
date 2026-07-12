@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { Bullet, Project, Skill } from '../../api/bank'
 import {
   bulletHooks,
   educationHooks,
@@ -31,9 +32,37 @@ function useToggleSet(initial: number[]) {
   return [selected, toggle] as const
 }
 
-function ScoreBadge({ matched }: { matched: string[] | undefined }) {
+function splitByMatch<T>(
+  items: T[],
+  idOf: (item: T) => number,
+  matches: Record<string, string[] | undefined>
+): { matched: T[]; unmatched: T[] } {
+  const matched: T[] = []
+  const unmatched: T[] = []
+  for (const item of items) {
+    const keywords = matches[String(idOf(item))]
+    ;(keywords && keywords.length > 0 ? matched : unmatched).push(item)
+  }
+  return { matched, unmatched }
+}
+
+function RecommendedPill({ matched }: { matched: string[] | undefined }) {
   if (!matched || matched.length === 0) return null
-  return <span style={{ color: '#6a3bff', fontSize: 12 }}> matched: {matched.join(', ')}</span>
+  return (
+    <span
+      title={`Matched on: ${matched.join(', ')}`}
+      style={{
+        marginLeft: 6,
+        fontSize: 11,
+        color: '#0a7a2f',
+        background: '#e4f7e9',
+        borderRadius: 10,
+        padding: '1px 8px',
+      }}
+    >
+      Recommended
+    </span>
+  )
 }
 
 export function SelectionReview({
@@ -66,71 +95,142 @@ export function SelectionReview({
     })
   }
 
+  const bulletMatches = matchResult.scoring_metadata.bullets ?? {}
+  const skillMatches = matchResult.scoring_metadata.skills ?? {}
+  const projectMatches = matchResult.scoring_metadata.projects ?? {}
+
+  const { matched: matchedSkills, unmatched: unmatchedSkills } = splitByMatch(
+    skills ?? [],
+    (s) => s.id,
+    skillMatches
+  )
+  const { matched: matchedProjects, unmatched: unmatchedProjects } = splitByMatch(
+    projects ?? [],
+    (p) => p.id,
+    projectMatches
+  )
+
+  function BulletRow({ bullet }: { bullet: Bullet }) {
+    return (
+      <li key={bullet.id}>
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedBulletIds.has(bullet.id)}
+            onChange={() => toggleBullet(bullet.id)}
+          />
+          {bullet.text}
+          <RecommendedPill matched={bulletMatches[String(bullet.id)]} />
+        </label>
+      </li>
+    )
+  }
+
+  function SkillRow({ skill }: { skill: Skill }) {
+    return (
+      <li key={skill.id}>
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedSkillIds.has(skill.id)}
+            onChange={() => toggleSkill(skill.id)}
+          />
+          {skill.name} ({skill.category})
+          <RecommendedPill matched={skillMatches[String(skill.id)]} />
+        </label>
+      </li>
+    )
+  }
+
+  function ProjectRow({ project }: { project: Project }) {
+    return (
+      <li key={project.id}>
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedProjectIds.has(project.id)}
+            onChange={() => toggleProject(project.id)}
+          />
+          {project.name}
+          <RecommendedPill matched={projectMatches[String(project.id)]} />
+        </label>
+      </li>
+    )
+  }
+
   return (
     <div>
       <h2>
         Review selection for {jobDescription.company} — {jobDescription.role_title}
       </h2>
+      <p>
+        We pre-selected the best-matching content based on your job description — uncheck
+        anything you don't want, or expand "Show all" to add more from your bank.
+      </p>
 
       <h3>Experience</h3>
-      {(experienceEntries ?? []).map((entry) => (
-        <div key={entry.id} style={{ marginBottom: 12 }}>
-          <strong>
-            {entry.company} — {entry.title}
-          </strong>
-          <ul>
-            {(bullets ?? [])
-              .filter((bullet) => bullet.experience_entry_id === entry.id)
-              .map((bullet) => (
-                <li key={bullet.id}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selectedBulletIds.has(bullet.id)}
-                      onChange={() => toggleBullet(bullet.id)}
-                    />
-                    {bullet.text}
-                    <ScoreBadge matched={matchResult.scoring_metadata.bullets?.[String(bullet.id)]} />
-                  </label>
-                </li>
+      {(experienceEntries ?? []).map((entry) => {
+        const entryBullets = (bullets ?? []).filter(
+          (bullet) => bullet.experience_entry_id === entry.id
+        )
+        const { matched, unmatched } = splitByMatch(entryBullets, (b) => b.id, bulletMatches)
+        return (
+          <div key={entry.id} style={{ marginBottom: 12 }}>
+            <strong>
+              {entry.company} — {entry.title}
+            </strong>
+            <ul>
+              {matched.map((bullet) => (
+                <BulletRow key={bullet.id} bullet={bullet} />
               ))}
-          </ul>
-        </div>
-      ))}
+            </ul>
+            {unmatched.length > 0 && (
+              <details>
+                <summary>Show {unmatched.length} more bullet(s)</summary>
+                <ul>
+                  {unmatched.map((bullet) => (
+                    <BulletRow key={bullet.id} bullet={bullet} />
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
+        )
+      })}
 
       <h3>Skills</h3>
       <ul>
-        {(skills ?? []).map((skill) => (
-          <li key={skill.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedSkillIds.has(skill.id)}
-                onChange={() => toggleSkill(skill.id)}
-              />
-              {skill.name} ({skill.category})
-              <ScoreBadge matched={matchResult.scoring_metadata.skills?.[String(skill.id)]} />
-            </label>
-          </li>
+        {matchedSkills.map((skill) => (
+          <SkillRow key={skill.id} skill={skill} />
         ))}
       </ul>
+      {unmatchedSkills.length > 0 && (
+        <details>
+          <summary>Show all skills ({unmatchedSkills.length} more)</summary>
+          <ul>
+            {unmatchedSkills.map((skill) => (
+              <SkillRow key={skill.id} skill={skill} />
+            ))}
+          </ul>
+        </details>
+      )}
 
       <h3>Projects</h3>
       <ul>
-        {(projects ?? []).map((project) => (
-          <li key={project.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedProjectIds.has(project.id)}
-                onChange={() => toggleProject(project.id)}
-              />
-              {project.name}
-              <ScoreBadge matched={matchResult.scoring_metadata.projects?.[String(project.id)]} />
-            </label>
-          </li>
+        {matchedProjects.map((project) => (
+          <ProjectRow key={project.id} project={project} />
         ))}
       </ul>
+      {unmatchedProjects.length > 0 && (
+        <details>
+          <summary>Show all projects ({unmatchedProjects.length} more)</summary>
+          <ul>
+            {unmatchedProjects.map((project) => (
+              <ProjectRow key={project.id} project={project} />
+            ))}
+          </ul>
+        </details>
+      )}
 
       <h3>Education</h3>
       <ul>

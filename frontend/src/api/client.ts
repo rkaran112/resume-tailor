@@ -33,11 +33,23 @@ async function requestText(path: string): Promise<string> {
   return res.text()
 }
 
+async function requestFile<T>(path: string, file: File): Promise<T> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new ApiError(res.status, detail || res.statusText)
+  }
+  return (await res.json()) as T
+}
+
 export const apiClient = {
   get: <T>(path: string): Promise<T> => request<T>(path),
   getText: (path: string): Promise<string> => requestText(path),
   post: <T>(path: string, body: unknown): Promise<T> =>
     request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  postFile: <T>(path: string, file: File): Promise<T> => requestFile<T>(path, file),
   patch: <T>(path: string, body: unknown): Promise<T> =>
     request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown): Promise<T> =>
