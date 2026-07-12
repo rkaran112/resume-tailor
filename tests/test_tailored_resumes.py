@@ -1,4 +1,8 @@
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
+
+from app.services.llm_enhance import EnhancedBullet
 
 
 def _seed_bank(client: TestClient) -> dict:
@@ -146,4 +150,69 @@ def test_download_before_finalize_rejected(client: TestClient) -> None:
     draft = _create_draft(client, bank)
 
     resp = client.get(f"/api/tailored-resumes/{draft['id']}/download")
+    assert resp.status_code == 409
+
+
+def test_enhance_disabled_by_default(client: TestClient) -> None:
+    bank = _seed_bank(client)
+    draft = _create_draft(client, bank)
+
+    resp = client.post(f"/api/tailored-resumes/{draft['id']}/enhance")
+    assert resp.status_code == 503
+
+
+def test_enhance_when_enabled_returns_suggestions(client: TestClient) -> None:
+    bank = _seed_bank(client)
+    draft = _create_draft(client, bank)
+
+    fake_results = [
+        EnhancedBullet(
+            original="Built Python APIs", suggested="Developed Python APIs", flagged=False
+        )
+    ]
+
+    with (
+        patch("app.api.routes.tailored_resumes.get_settings") as mock_settings,
+        patch("app.api.routes.tailored_resumes.enhance_bullets", return_value=fake_results),
+    ):
+        mock_settings.return_value.enable_llm_enhance = True
+        resp = client.post(f"/api/tailored-resumes/{draft['id']}/enhance")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["bullets"][0]["bullet_id"] == bank["bullet"]["id"]
+    assert body["bullets"][0]["suggested"] == "Developed Python APIs"
+    assert body["bullets"][0]["flagged"] is False
+
+
+def test_accept_enhanced_bullets_applies_to_preview(client: TestClient) -> None:
+    bank = _seed_bank(client)
+    draft = _create_draft(client, bank)
+
+    resp = client.post(
+        f"/api/tailored-resumes/{draft['id']}/enhanced-bullets",
+        json={"accepted": {str(bank["bullet"]["id"]): "Developed robust Python APIs"}},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["llm_enhanced"] is True
+
+    resp = client.get(f"/api/tailored-resumes/{draft['id']}/preview")
+    assert resp.status_code == 200
+    assert "Developed robust Python APIs" in resp.text
+    assert "Built Python APIs" not in resp.text
+
+
+def test_enhance_and_accept_rejected_when_finalized(client: TestClient) -> None:
+    bank = _seed_bank(client)
+    draft = _create_draft(client, bank)
+    client.post(f"/api/tailored-resumes/{draft['id']}/finalize")
+
+    with patch("app.api.routes.tailored_resumes.get_settings") as mock_settings:
+        mock_settings.return_value.enable_llm_enhance = True
+        resp = client.post(f"/api/tailored-resumes/{draft['id']}/enhance")
+    assert resp.status_code == 409
+
+    resp = client.post(
+        f"/api/tailored-resumes/{draft['id']}/enhanced-bullets", json={"accepted": {}}
+    )
     assert resp.status_code == 409

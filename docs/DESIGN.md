@@ -185,8 +185,20 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    `status_events`. Frontend `ApplicationsPage` (table) → `ApplicationDetailPage`
    (`StatusTimeline` + status-change control); `ExportControls` (Slice 4) gained a "log this
    application" form that appears right after finalize, pre-filled from the job description.
-6. **LLM opt-in bullet enhancement** — `llm_client.py`, `llm_enhance.py`, `enhance` endpoint,
-   `LLMEnhancePanel` diff UI.
+6. **LLM opt-in bullet enhancement** (done). `app/services/llm_client.py` (zero-arg
+   `anthropic.Anthropic()` client, resolves credentials from the environment),
+   `app/services/llm_enhance.py` (`claude-opus-4-8`, adaptive thinking, structured JSON output
+   via `output_config.format` — receives only the JD + already-selected bullet texts, never the
+   full bank; a length-deviation heuristic flags large suggested rewrites for extra scrutiny).
+   Gated behind `ENABLE_LLM_ENHANCE` (default `false`) — `POST .../enhance` returns 503 with the
+   flag off, so the app works with zero API key. `POST .../enhanced-bullets` persists only the
+   bullets the user explicitly accepted into `TailoredResume.llm_enhanced_bullets`, which
+   `resolve.py` substitutes at preview/finalize time — nothing is ever auto-applied. Frontend
+   `LLMEnhancePanel`: trigger suggestions, per-bullet accept checkboxes with a flagged warning,
+   apply only the accepted ones. Verified via unit tests against a fake Anthropic client (no
+   real API calls) plus an end-to-end browser check of the disabled-by-default path — this
+   sandbox has no `ANTHROPIC_API_KEY`, so the live call path is implemented and structurally
+   tested but not exercised against the real API.
 7. **Cover letter generation (last)** — `CoverLetter` model/migration, `cover_letter_gen.py`,
    `cover_letter_template.html`, `cover_letters.py` routes, `CoverLetterPanel`, wire into
    `Application` linking.

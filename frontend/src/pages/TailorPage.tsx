@@ -3,6 +3,7 @@ import { useCreateTailoredResume } from '../api/tailoring'
 import type { JobDescription, MatchResult, Selection } from '../api/tailoring'
 import { ExportControls } from '../components/tailor/ExportControls'
 import { JDInput } from '../components/tailor/JDInput'
+import { LLMEnhancePanel } from '../components/tailor/LLMEnhancePanel'
 import { ResumePreview } from '../components/tailor/ResumePreview'
 import { SelectionReview } from '../components/tailor/SelectionReview'
 
@@ -47,6 +48,8 @@ export function TailorPage() {
 
       {tailoredResumeId !== null && (
         <>
+          <LLMEnhancePanel tailoredResumeId={tailoredResumeId} />
+
           <h2>Preview</h2>
           <ResumePreview tailoredResumeId={tailoredResumeId} />
           {jobDescription && (

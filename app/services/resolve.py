@@ -36,13 +36,18 @@ def build_resolved_content(
     selected_project_ids: Sequence[int],
     selected_skill_ids: Sequence[int],
     selected_education_ids: Sequence[int],
+    llm_enhanced_bullets: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Denormalizes selected bank content into the plain-dict context shape
-    app.services.renderer.render_html expects."""
+    app.services.renderer.render_html expects. llm_enhanced_bullets (bullet id, as a string
+    key since it round-trips through JSON, -> accepted rewritten text) overrides an experience
+    bullet's text when present — the opt-in LLM rewrite never changes which bullets are
+    selected, only how an already-selected one is worded."""
     selected_bullet_id_set = set(selected_experience_bullet_ids)
     selected_project_id_set = set(selected_project_ids)
     selected_skill_id_set = set(selected_skill_ids)
     selected_education_id_set = set(selected_education_ids)
+    enhanced_bullets = llm_enhanced_bullets or {}
 
     bullets_by_experience_entry: dict[int, list[Bullet]] = {}
     bullets_by_project: dict[int, list[Bullet]] = {}
@@ -60,7 +65,7 @@ def build_resolved_content(
             "start_date": _format_date(entry.start_date),
             "end_date": _format_date(entry.end_date),
             "bullets": [
-                bullet.text
+                enhanced_bullets.get(str(bullet.id), bullet.text)
                 for bullet in bullets_by_experience_entry.get(entry.id, [])
                 if bullet.id in selected_bullet_id_set
             ],

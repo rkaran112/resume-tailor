@@ -99,3 +99,31 @@ export function useFinalizeTailoredResume() {
       apiClient.post<TailoredResume>(`/tailored-resumes/${tailoredResumeId}/finalize`, {}),
   })
 }
+
+export interface EnhancedBullet {
+  bullet_id: number
+  original: string
+  suggested: string
+  flagged: boolean
+}
+
+export interface EnhanceResponse {
+  bullets: EnhancedBullet[]
+}
+
+export function useEnhanceBullets() {
+  return useMutation({
+    mutationFn: (tailoredResumeId: number) =>
+      apiClient.post<EnhanceResponse>(`/tailored-resumes/${tailoredResumeId}/enhance`, {}),
+  })
+}
+
+export function useAcceptEnhancedBullets() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, accepted }: { id: number; accepted: Record<number, string> }) =>
+      apiClient.post<TailoredResume>(`/tailored-resumes/${id}/enhanced-bullets`, { accepted }),
+    onSuccess: (_data, variables) =>
+      qc.invalidateQueries({ queryKey: ['tailored-resume-preview', variables.id] }),
+  })
+}

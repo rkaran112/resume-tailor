@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
     generated_resumes_dir: str = "generated/resumes"
+    enable_llm_enhance: bool = False
+    enable_cover_letter: bool = False
 
 
 @lru_cache

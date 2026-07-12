@@ -21,6 +21,21 @@ class TailoredResumeUpdate(BaseModel):
     scoring_metadata: dict[str, Any] | None = None
 
 
+class EnhancedBulletOut(BaseModel):
+    bullet_id: int
+    original: str
+    suggested: str
+    flagged: bool
+
+
+class EnhanceResponse(BaseModel):
+    bullets: list[EnhancedBulletOut]
+
+
+class AcceptEnhancedBulletsRequest(BaseModel):
+    accepted: dict[int, str]
+
+
 class TailoredResumeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

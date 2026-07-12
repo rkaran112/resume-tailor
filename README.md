@@ -9,7 +9,9 @@ a per-resume basis.
 
 See `docs/DESIGN.md` for the full design and build-order roadmap.
 
-Status: Slice 1 (bank CRUD) and Slice 2 (PDF rendering pipeline) are implemented.
+Status: Slices 1-6 are implemented (bank CRUD, PDF rendering, matching engine, tailoring +
+finalize/export, application tracker, opt-in LLM bullet enhancement). See `docs/DESIGN.md` for
+what's left (Slice 7: cover letters).
 
 ## Setup
 
@@ -34,3 +36,8 @@ npm run dev
   `scratch/sample_resume.html` and `scratch/sample_resume.pdf`, for visually reviewing
   `app/templates/resume_template.html`
 - `cd frontend && npm run lint && npm run build` — lint / type-check / build the frontend
+
+## LLM bullet enhancement (opt-in)
+
+Set `ENABLE_LLM_ENHANCE=true` and an `ANTHROPIC_API_KEY` (or run `ant auth login`) to turn on
+`POST /tailored-resumes/{id}/enhance`. Off by default — the app works fully with no API key.

@@ -17,11 +17,15 @@ from app.models.project import Project
 from app.models.skill import Skill
 from app.models.tailored_resume import TailoredResume
 from app.schemas.tailored_resume import (
+    AcceptEnhancedBulletsRequest,
+    EnhancedBulletOut,
+    EnhanceResponse,
     TailoredResumeCreate,
     TailoredResumeRead,
     TailoredResumeUpdate,
 )
 from app.services.filename import build_filename
+from app.services.llm_enhance import enhance_bullets
 from app.services.renderer import html_to_pdf, render_html
 from app.services.resolve import build_resolved_content, split_full_name
 
@@ -47,6 +51,7 @@ def _resolve_content_for(db: Session, tailored_resume: TailoredResume) -> dict[s
         selected_project_ids=tailored_resume.selected_project_ids,
         selected_skill_ids=tailored_resume.selected_skill_ids,
         selected_education_ids=tailored_resume.selected_education_ids,
+        llm_enhanced_bullets=tailored_resume.llm_enhanced_bullets,
     )
 
 
@@ -88,6 +93,57 @@ def update_tailored_resume(
         raise HTTPException(status_code=409, detail="Cannot edit a finalized tailored resume")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(tailored_resume, field, value)
+    db.commit()
+    db.refresh(tailored_resume)
+    return tailored_resume
+
+
+@router.post("/tailored-resumes/{tailored_resume_id}/enhance", response_model=EnhanceResponse)
+def enhance_tailored_resume_bullets(
+    tailored_resume_id: int, db: Session = Depends(get_db)
+) -> EnhanceResponse:
+    if not get_settings().enable_llm_enhance:
+        raise HTTPException(status_code=503, detail="LLM bullet enhancement is disabled")
+
+    tailored_resume = get_or_404(db, TailoredResume, tailored_resume_id)
+    if tailored_resume.status == "finalized":
+        raise HTTPException(status_code=409, detail="Cannot enhance a finalized tailored resume")
+
+    job_description = get_or_404(db, JobDescription, tailored_resume.job_description_id)
+    bullets = list(
+        db.query(Bullet).filter(
+            Bullet.id.in_(tailored_resume.selected_experience_bullet_ids)
+        ).all()
+    )
+
+    results = enhance_bullets(job_description.raw_text, [bullet.text for bullet in bullets])
+    return EnhanceResponse(
+        bullets=[
+            EnhancedBulletOut(
+                bullet_id=bullet.id,
+                original=result.original,
+                suggested=result.suggested,
+                flagged=result.flagged,
+            )
+            for bullet, result in zip(bullets, results, strict=True)
+        ]
+    )
+
+
+@router.post(
+    "/tailored-resumes/{tailored_resume_id}/enhanced-bullets", response_model=TailoredResumeRead
+)
+def accept_enhanced_bullets(
+    tailored_resume_id: int, payload: AcceptEnhancedBulletsRequest, db: Session = Depends(get_db)
+) -> TailoredResume:
+    tailored_resume = get_or_404(db, TailoredResume, tailored_resume_id)
+    if tailored_resume.status == "finalized":
+        raise HTTPException(status_code=409, detail="Cannot edit a finalized tailored resume")
+
+    merged = dict(tailored_resume.llm_enhanced_bullets or {})
+    merged.update({str(bullet_id): text for bullet_id, text in payload.accepted.items()})
+    tailored_resume.llm_enhanced_bullets = merged
+    tailored_resume.llm_enhanced = True
     db.commit()
     db.refresh(tailored_resume)
     return tailored_resume

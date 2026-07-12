@@ -94,3 +94,44 @@ def test_build_resolved_content_filters_by_selection() -> None:
 
     assert len(result["education"]) == 1
     assert result["education"][0]["institution"] == "State U"
+
+
+def test_build_resolved_content_uses_llm_enhanced_bullet_text_when_present() -> None:
+    contact = ContactInfo(
+        id=1,
+        name="Jane Doe",
+        email="jane@example.com",
+        phone="555-1234",
+        location="Remote",
+        links=[],
+    )
+    experience_entries = [
+        ExperienceEntry(
+            id=1,
+            company="Acme",
+            title="Engineer",
+            location="Remote",
+            start_date=date(2022, 1, 1),
+            display_order=0,
+        )
+    ]
+    bullets = [
+        Bullet(id=10, experience_entry_id=1, text="Original bullet text", tags=[]),
+        Bullet(id=11, experience_entry_id=1, text="Unenhanced bullet", tags=[]),
+    ]
+
+    result = build_resolved_content(
+        contact_info=contact,
+        experience_entries=experience_entries,
+        bullets=bullets,
+        projects=[],
+        skills=[],
+        education_entries=[],
+        selected_experience_bullet_ids=[10, 11],
+        selected_project_ids=[],
+        selected_skill_ids=[],
+        selected_education_ids=[],
+        llm_enhanced_bullets={"10": "Rewritten bullet text"},
+    )
+
+    assert result["experience"][0]["bullets"] == ["Rewritten bullet text", "Unenhanced bullet"]
