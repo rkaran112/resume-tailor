@@ -178,8 +178,13 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    `resolved_content`, renders + saves the PDF, locks the row), `GET .../download`. Frontend
    `TailorPage` wires `JDInput` → `SelectionReview` (full bank shown, checkboxes pre-checked
    from the match result) → `ResumePreview` → `ExportControls`.
-5. **Application tracker** — `Application`/`ApplicationStatusEvent`, routes,
-   `ApplicationsPage`/`ApplicationDetailPage`, link from a finalized resume to a new application.
+5. **Application tracker** (done). `Application`/`ApplicationStatusEvent` models + migration
+   (`Application.cover_letter_id` deferred to Slice 7's migration, added alongside the
+   `cover_letters` table it references), `POST /applications` (seeds the first status event),
+   `PATCH`, `POST .../status` (updates status + appends a timeline event), `GET` with embedded
+   `status_events`. Frontend `ApplicationsPage` (table) → `ApplicationDetailPage`
+   (`StatusTimeline` + status-change control); `ExportControls` (Slice 4) gained a "log this
+   application" form that appears right after finalize, pre-filled from the job description.
 6. **LLM opt-in bullet enhancement** — `llm_client.py`, `llm_enhance.py`, `enhance` endpoint,
    `LLMEnhancePanel` diff UI.
 7. **Cover letter generation (last)** — `CoverLetter` model/migration, `cover_letter_gen.py`,

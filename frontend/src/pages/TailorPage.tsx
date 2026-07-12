@@ -49,7 +49,9 @@ export function TailorPage() {
         <>
           <h2>Preview</h2>
           <ResumePreview tailoredResumeId={tailoredResumeId} />
-          <ExportControls tailoredResumeId={tailoredResumeId} />
+          {jobDescription && (
+            <ExportControls tailoredResumeId={tailoredResumeId} jobDescription={jobDescription} />
+          )}
         </>
       )}
     </div>

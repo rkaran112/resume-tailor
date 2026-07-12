@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApplicationsPage } from './pages/ApplicationsPage'
 import { BankPage } from './pages/BankPage'
 import { TailorPage } from './pages/TailorPage'
 
 const queryClient = new QueryClient()
 
-const PAGES = ['Bank', 'Tailor'] as const
+const PAGES = ['Bank', 'Tailor', 'Applications'] as const
 type Page = (typeof PAGES)[number]
 
 function AppShell() {
@@ -22,6 +23,7 @@ function AppShell() {
       </nav>
       {page === 'Bank' && <BankPage />}
       {page === 'Tailor' && <TailorPage />}
+      {page === 'Applications' && <ApplicationsPage />}
     </div>
   )
 }

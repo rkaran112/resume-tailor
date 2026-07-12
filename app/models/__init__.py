@@ -1,3 +1,5 @@
+from app.models.application import Application
+from app.models.application_status_event import ApplicationStatusEvent
 from app.models.bullet import Bullet
 from app.models.contact import ContactInfo
 from app.models.education import EducationEntry
@@ -8,6 +10,8 @@ from app.models.skill import Skill
 from app.models.tailored_resume import TailoredResume
 
 __all__ = [
+    "Application",
+    "ApplicationStatusEvent",
     "Bullet",
     "ContactInfo",
     "EducationEntry",
