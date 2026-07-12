@@ -6,9 +6,14 @@ import { useFinalizeTailoredResume, type JobDescription, type TailoredResume } f
 interface ExportControlsProps {
   tailoredResumeId: number
   jobDescription: JobDescription
+  coverLetterId?: number | null
 }
 
-export function ExportControls({ tailoredResumeId, jobDescription }: ExportControlsProps) {
+export function ExportControls({
+  tailoredResumeId,
+  jobDescription,
+  coverLetterId = null,
+}: ExportControlsProps) {
   const finalize = useFinalizeTailoredResume()
   const createApplication = useCreateApplication()
   const [finalized, setFinalized] = useState<TailoredResume | null>(null)
@@ -24,6 +29,7 @@ export function ExportControls({ tailoredResumeId, jobDescription }: ExportContr
     e.preventDefault()
     const application = await createApplication.mutateAsync({
       tailored_resume_id: tailoredResumeId,
+      cover_letter_id: coverLetterId,
       job_description_id: jobDescription.id,
       company: jobDescription.company,
       role_title: jobDescription.role_title,

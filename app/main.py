@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from app.api.routes.applications import router as applications_router
 from app.api.routes.bank import router as bank_router
+from app.api.routes.cover_letters import router as cover_letters_router
 from app.api.routes.job_descriptions import router as job_descriptions_router
 from app.api.routes.tailored_resumes import router as tailored_resumes_router
 from app.core.config import get_settings
@@ -51,6 +52,7 @@ def create_app() -> FastAPI:
     app.include_router(bank_router, prefix="/api")
     app.include_router(job_descriptions_router, prefix="/api")
     app.include_router(tailored_resumes_router, prefix="/api")
+    app.include_router(cover_letters_router, prefix="/api")
     app.include_router(applications_router, prefix="/api")
 
     return app

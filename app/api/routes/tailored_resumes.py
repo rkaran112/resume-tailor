@@ -1,20 +1,19 @@
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_or_404, get_or_create_contact_info
+from app.api.deps import (
+    get_or_404,
+    get_or_create_contact_info,
+    resolve_tailored_resume_content,
+)
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.bullet import Bullet
-from app.models.education import EducationEntry
-from app.models.experience import ExperienceEntry
 from app.models.job_description import JobDescription
-from app.models.project import Project
-from app.models.skill import Skill
 from app.models.tailored_resume import TailoredResume
 from app.schemas.tailored_resume import (
     AcceptEnhancedBulletsRequest,
@@ -27,32 +26,9 @@ from app.schemas.tailored_resume import (
 from app.services.filename import build_filename
 from app.services.llm_enhance import enhance_bullets
 from app.services.renderer import html_to_pdf, render_html
-from app.services.resolve import build_resolved_content, split_full_name
+from app.services.resolve import split_full_name
 
 router = APIRouter(tags=["tailored-resumes"])
-
-
-def _resolve_content_for(db: Session, tailored_resume: TailoredResume) -> dict[str, Any]:
-    contact = get_or_create_contact_info(db)
-    experience_entries = list(db.query(ExperienceEntry).all())
-    bullets = list(db.query(Bullet).filter(Bullet.is_active.is_(True)).all())
-    projects = list(db.query(Project).all())
-    skills = list(db.query(Skill).all())
-    education_entries = list(db.query(EducationEntry).all())
-
-    return build_resolved_content(
-        contact_info=contact,
-        experience_entries=experience_entries,
-        bullets=bullets,
-        projects=projects,
-        skills=skills,
-        education_entries=education_entries,
-        selected_experience_bullet_ids=tailored_resume.selected_experience_bullet_ids,
-        selected_project_ids=tailored_resume.selected_project_ids,
-        selected_skill_ids=tailored_resume.selected_skill_ids,
-        selected_education_ids=tailored_resume.selected_education_ids,
-        llm_enhanced_bullets=tailored_resume.llm_enhanced_bullets,
-    )
 
 
 @router.get("/tailored-resumes", response_model=list[TailoredResumeRead])
@@ -152,7 +128,7 @@ def accept_enhanced_bullets(
 @router.get("/tailored-resumes/{tailored_resume_id}/preview", response_class=HTMLResponse)
 def preview_tailored_resume(tailored_resume_id: int, db: Session = Depends(get_db)) -> str:
     tailored_resume = get_or_404(db, TailoredResume, tailored_resume_id)
-    context = _resolve_content_for(db, tailored_resume)
+    context = resolve_tailored_resume_content(db, tailored_resume)
     return render_html(context)
 
 
@@ -166,7 +142,7 @@ def finalize_tailored_resume(
 
     job_description = get_or_404(db, JobDescription, tailored_resume.job_description_id)
     contact = get_or_create_contact_info(db)
-    resolved_content = _resolve_content_for(db, tailored_resume)
+    resolved_content = resolve_tailored_resume_content(db, tailored_resume)
 
     html = render_html(resolved_content)
     pdf_bytes = html_to_pdf(html)

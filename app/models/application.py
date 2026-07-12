@@ -7,9 +7,6 @@ from app.db.base import Base, TimestampMixin
 
 
 class Application(Base, TimestampMixin):
-    """cover_letter_id is deferred to Slice 7's migration, added alongside the
-    cover_letters table it references (can't FK to a table that doesn't exist yet)."""
-
     __tablename__ = "applications"
     __table_args__ = (
         CheckConstraint(
@@ -21,6 +18,9 @@ class Application(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     tailored_resume_id: Mapped[int | None] = mapped_column(
         ForeignKey("tailored_resumes.id"), nullable=True
+    )
+    cover_letter_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cover_letters.id"), nullable=True
     )
     job_description_id: Mapped[int] = mapped_column(
         ForeignKey("job_descriptions.id"), nullable=False

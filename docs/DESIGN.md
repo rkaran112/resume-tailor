@@ -199,9 +199,26 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    real API calls) plus an end-to-end browser check of the disabled-by-default path — this
    sandbox has no `ANTHROPIC_API_KEY`, so the live call path is implemented and structurally
    tested but not exercised against the real API.
-7. **Cover letter generation (last)** — `CoverLetter` model/migration, `cover_letter_gen.py`,
-   `cover_letter_template.html`, `cover_letters.py` routes, `CoverLetterPanel`, wire into
-   `Application` linking.
+7. **Cover letter generation (last)** (done). `CoverLetter` model + migration 0005 (adds
+   `Application.cover_letter_id`, deferred from Slice 5), `app/services/cover_letter_gen.py`
+   (`claude-opus-4-8`, adaptive thinking, structured JSON output — receives only the JD +
+   the tailored resume's `resolved_content` snapshot, or a live re-derivation of the same
+   shape if the resume is still a draft; never sees the full bank), `cover_letter_template.html`
+   (fixed serif letter template, `render_html` generalized to take a `template_name`),
+   `cover_letters.py` routes (create/get/patch/preview/finalize/download, gated behind
+   `ENABLE_COVER_LETTER`, default `false` — `POST /cover-letters` returns 503 with the flag
+   off). `app/api/deps.py` gained `resolve_tailored_resume_content()`, shared between
+   `tailored_resumes.py` and `cover_letters.py` to avoid duplicating the bank-to-resolved-content
+   query. Frontend `CoverLetterPanel`: generate draft, editable textarea, finalize + download;
+   `ExportControls`'s "log this application" form now passes the finalized cover letter's id
+   through to `Application.cover_letter_id`; `ApplicationDetailPage` links the cover letter
+   download alongside the resume download when one is attached. Verified via unit tests against
+   a fake Anthropic client (no real API calls) plus a full mocked-generation route test suite
+   (`tests/test_cover_letters.py`) plus an end-to-end browser check of the disabled-by-default
+   path — this sandbox has no `ANTHROPIC_API_KEY`, so the live call path is implemented and
+   structurally tested but not exercised against the real API.
+
+All 7 slices of the resume-tailor V1 build are now complete.
 
 Standing quality gate across every slice: `ruff check .` + `mypy app` + `uv run pytest` (real
 Postgres via docker-compose) — set up in `.github/workflows/ci.yml` from Slice 1, not
@@ -223,4 +240,5 @@ retrofitted later.
   numbers were introduced; confirm rejecting a suggestion leaves the original bullet untouched.
 - **Slice 7**: generate a cover letter draft against a real finalized resume + JD; confirm every
   claim traces back to the resume content; edit, finalize, download, confirm filename and
-  application-detail linking.
+  application-detail linking. (Verified structurally, per the note above — no real API key in
+  this sandbox to exercise live generation end-to-end in the browser.)

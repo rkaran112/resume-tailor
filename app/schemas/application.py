@@ -8,6 +8,7 @@ ApplicationStatus = Literal["applied", "interview", "offer", "rejected", "withdr
 
 class ApplicationCreate(BaseModel):
     tailored_resume_id: int | None = None
+    cover_letter_id: int | None = None
     job_description_id: int
     company: str
     role_title: str
@@ -21,6 +22,7 @@ class ApplicationUpdate(BaseModel):
     role_title: str | None = None
     date_applied: date | None = None
     notes: str | None = None
+    cover_letter_id: int | None = None
 
 
 class ApplicationStatusChange(BaseModel):
@@ -40,6 +42,7 @@ class ApplicationStatusEventRead(BaseModel):
 class ApplicationRead(BaseModel):
     id: int
     tailored_resume_id: int | None
+    cover_letter_id: int | None
     job_description_id: int
     company: str
     role_title: str

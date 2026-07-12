@@ -5,6 +5,7 @@ from app.api.deps import get_or_404
 from app.db.session import get_db
 from app.models.application import Application
 from app.models.application_status_event import ApplicationStatusEvent
+from app.models.cover_letter import CoverLetter
 from app.models.job_description import JobDescription
 from app.models.tailored_resume import TailoredResume
 from app.schemas.application import (
@@ -33,6 +34,7 @@ def _to_read(
     return ApplicationRead(
         id=application.id,
         tailored_resume_id=application.tailored_resume_id,
+        cover_letter_id=application.cover_letter_id,
         job_description_id=application.job_description_id,
         company=application.company,
         role_title=application.role_title,
@@ -61,9 +63,12 @@ def create_application(
     get_or_404(db, JobDescription, payload.job_description_id)
     if payload.tailored_resume_id is not None:
         get_or_404(db, TailoredResume, payload.tailored_resume_id)
+    if payload.cover_letter_id is not None:
+        get_or_404(db, CoverLetter, payload.cover_letter_id)
 
     application = Application(
         tailored_resume_id=payload.tailored_resume_id,
+        cover_letter_id=payload.cover_letter_id,
         job_description_id=payload.job_description_id,
         company=payload.company,
         role_title=payload.role_title,
@@ -92,7 +97,10 @@ def update_application(
     application_id: int, payload: ApplicationUpdate, db: Session = Depends(get_db)
 ) -> ApplicationRead:
     application = get_or_404(db, Application, application_id)
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    if updates.get("cover_letter_id") is not None:
+        get_or_404(db, CoverLetter, updates["cover_letter_id"])
+    for field, value in updates.items():
         setattr(application, field, value)
     db.commit()
     db.refresh(application)

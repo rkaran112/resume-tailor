@@ -13,6 +13,7 @@ export interface ApplicationStatusEvent {
 export interface Application {
   id: number
   tailored_resume_id: number | null
+  cover_letter_id: number | null
   job_description_id: number
   company: string
   role_title: string
@@ -26,6 +27,7 @@ export interface Application {
 
 export interface ApplicationCreate {
   tailored_resume_id?: number | null
+  cover_letter_id?: number | null
   job_description_id: number
   company: string
   role_title: string

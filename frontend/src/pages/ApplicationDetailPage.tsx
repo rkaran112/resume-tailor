@@ -49,6 +49,13 @@ export function ApplicationDetailPage({ applicationId, onBack }: ApplicationDeta
           </a>
         </p>
       )}
+      {application.cover_letter_id !== null && (
+        <p>
+          <a href={`${API_BASE_URL}/cover-letters/${application.cover_letter_id}/download`}>
+            Download cover letter
+          </a>
+        </p>
+      )}
 
       <h2>Change status</h2>
       <select

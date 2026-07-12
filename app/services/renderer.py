@@ -12,8 +12,8 @@ _env = Environment(
 )
 
 
-def render_html(context: dict[str, Any]) -> str:
-    template = _env.get_template("resume_template.html")
+def render_html(context: dict[str, Any], template_name: str = "resume_template.html") -> str:
+    template = _env.get_template(template_name)
     return template.render(**context)
 
 

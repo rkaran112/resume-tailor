@@ -9,9 +9,9 @@ a per-resume basis.
 
 See `docs/DESIGN.md` for the full design and build-order roadmap.
 
-Status: Slices 1-6 are implemented (bank CRUD, PDF rendering, matching engine, tailoring +
-finalize/export, application tracker, opt-in LLM bullet enhancement). See `docs/DESIGN.md` for
-what's left (Slice 7: cover letters).
+Status: all 7 slices are implemented (bank CRUD, PDF rendering, matching engine, tailoring +
+finalize/export, application tracker, opt-in LLM bullet enhancement, opt-in cover letter
+generation). See `docs/DESIGN.md` for the full build history.
 
 ## Setup
 
@@ -41,3 +41,10 @@ npm run dev
 
 Set `ENABLE_LLM_ENHANCE=true` and an `ANTHROPIC_API_KEY` (or run `ant auth login`) to turn on
 `POST /tailored-resumes/{id}/enhance`. Off by default — the app works fully with no API key.
+
+## Cover letter generation (opt-in)
+
+Set `ENABLE_COVER_LETTER=true` and an `ANTHROPIC_API_KEY` (or run `ant auth login`) to turn on
+`POST /cover-letters`. Off by default — the app works fully with no API key. Generation is
+grounded strictly in the tailored resume's already-selected content (never the full bank) and
+the job description.
