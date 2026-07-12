@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://resume_tailor:resume_tailor@localhost:5432/resume_tailor"
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
+    generated_resumes_dir: str = "generated/resumes"
 
 
 @lru_cache

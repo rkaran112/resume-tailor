@@ -5,6 +5,7 @@ from app.models.experience import ExperienceEntry
 from app.models.job_description import JobDescription
 from app.models.project import Project
 from app.models.skill import Skill
+from app.models.tailored_resume import TailoredResume
 
 __all__ = [
     "Bullet",
@@ -14,4 +15,5 @@ __all__ = [
     "JobDescription",
     "Project",
     "Skill",
+    "TailoredResume",
 ]

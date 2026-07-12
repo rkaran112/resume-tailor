@@ -1,4 +1,5 @@
-const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api'
+export const API_BASE_URL: string =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api'
 
 export class ApiError extends Error {
   status: number
@@ -23,8 +24,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return (await res.json()) as T
 }
 
+async function requestText(path: string): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}${path}`)
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new ApiError(res.status, detail || res.statusText)
+  }
+  return res.text()
+}
+
 export const apiClient = {
   get: <T>(path: string): Promise<T> => request<T>(path),
+  getText: (path: string): Promise<string> => requestText(path),
   post: <T>(path: string, body: unknown): Promise<T> =>
     request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   patch: <T>(path: string, body: unknown): Promise<T> =>

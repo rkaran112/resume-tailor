@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_or_404
+from app.api.deps import CONTACT_INFO_ID, get_or_404, get_or_create_contact_info
 from app.db.session import get_db
 from app.models.bullet import Bullet
 from app.models.contact import ContactInfo
@@ -26,8 +26,6 @@ from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.schemas.skill import SkillCreate, SkillRead, SkillUpdate
 
 router = APIRouter(tags=["bank"])
-
-CONTACT_INFO_ID = 1
 
 
 # ---- Skills ----
@@ -254,15 +252,7 @@ def delete_bullet(bullet_id: int, db: Session = Depends(get_db)) -> None:
 
 @router.get("/contact-info", response_model=ContactInfoRead)
 def get_contact_info(db: Session = Depends(get_db)) -> ContactInfo:
-    contact = db.get(ContactInfo, CONTACT_INFO_ID)
-    if contact is None:
-        contact = ContactInfo(
-            id=CONTACT_INFO_ID, name="", email="", phone="", location="", links=[]
-        )
-        db.add(contact)
-        db.commit()
-        db.refresh(contact)
-    return contact
+    return get_or_create_contact_info(db)
 
 
 @router.put("/contact-info", response_model=ContactInfoRead)

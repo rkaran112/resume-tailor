@@ -25,4 +25,5 @@ Thumbs.db
 *.pdf
 !templates/**/*.pdf
 scratch/
+generated/
 .gstack/
