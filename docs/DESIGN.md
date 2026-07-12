@@ -171,8 +171,13 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    `POST /job-descriptions/{id}/match`, unit tests with fixed fixtures. Experience entries and
    education are always included wholesale (nothing to score them by); only their bullets,
    skills, and projects are ranked/capped by JD keyword overlap.
-4. **Selection review UI + finalize/export** — `TailorPage` wiring, `SelectionReview`,
-   `ResumePreview`, finalize endpoint (denormalize → render → filename → persist).
+4. **Selection review UI + finalize/export** (done). `TailoredResume` model + migration,
+   `app/services/resolve.py` (denormalizes selected bank content into `renderer.py`'s context
+   shape), `POST /tailored-resumes` (draft), `PATCH` (edit while draft), `GET .../preview`
+   (live HTML, same render path the PDF uses), `POST .../finalize` (snapshots
+   `resolved_content`, renders + saves the PDF, locks the row), `GET .../download`. Frontend
+   `TailorPage` wires `JDInput` → `SelectionReview` (full bank shown, checkboxes pre-checked
+   from the match result) → `ResumePreview` → `ExportControls`.
 5. **Application tracker** — `Application`/`ApplicationStatusEvent`, routes,
    `ApplicationsPage`/`ApplicationDetailPage`, link from a finalized resume to a new application.
 6. **LLM opt-in bullet enhancement** — `llm_client.py`, `llm_enhance.py`, `enhance` endpoint,
