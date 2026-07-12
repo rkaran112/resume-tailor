@@ -161,10 +161,16 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
    `/ready`, first Alembic migration (Skill/ExperienceEntry/Bullet/Project/EducationEntry/
    ContactInfo), bank CRUD routes + `BankPage`, CI gate (`ruff` + `mypy` + `pytest` against real
    Postgres, plus a frontend build/lint job).
-2. **PDF rendering pipeline in isolation** — fixed resume template with hardcoded sample
-   content, Playwright renderer, a throwaway script/route to produce a sample PDF.
-3. **JD input + matching engine** — `JobDescription` model/route, `matching.py`
-   (extraction+scoring), unit tests with fixed fixtures.
+2. **PDF rendering pipeline in isolation** (done). Fixed resume template
+   (`app/templates/resume_template.html`), Jinja2 + Playwright renderer (`app/services/renderer.py`),
+   sanitized filename builder (`app/services/filename.py`), `scripts/render_sample_resume.py`
+   producing a sample PDF for visual review.
+3. **JD input + matching engine** (done). `JobDescription` model + Alembic migration,
+   `app/services/matching.py` (stdlib-only `extract_keywords`/`score_bullet`/`score_skill`/
+   `score_project`/`match_bank_to_job_description`), `POST /job-descriptions` +
+   `POST /job-descriptions/{id}/match`, unit tests with fixed fixtures. Experience entries and
+   education are always included wholesale (nothing to score them by); only their bullets,
+   skills, and projects are ranked/capped by JD keyword overlap.
 4. **Selection review UI + finalize/export** — `TailorPage` wiring, `SelectionReview`,
    `ResumePreview`, finalize endpoint (denormalize → render → filename → persist).
 5. **Application tracker** — `Application`/`ApplicationStatusEvent`, routes,
