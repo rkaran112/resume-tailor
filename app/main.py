@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api.routes.bank import router as bank_router
+from app.api.routes.job_descriptions import router as job_descriptions_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, request_id_ctx
 from app.db.session import get_engine
@@ -46,5 +47,6 @@ def create_app() -> FastAPI:
         return {"status": "ready"}
 
     app.include_router(bank_router, prefix="/api")
+    app.include_router(job_descriptions_router, prefix="/api")
 
     return app

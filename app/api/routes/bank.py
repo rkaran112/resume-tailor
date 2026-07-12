@@ -1,9 +1,8 @@
-from typing import TypeVar
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_or_404
 from app.db.session import get_db
 from app.models.bullet import Bullet
 from app.models.contact import ContactInfo
@@ -30,15 +29,6 @@ router = APIRouter(tags=["bank"])
 
 CONTACT_INFO_ID = 1
 
-ModelT = TypeVar("ModelT")
-
-
-def _get_or_404(db: Session, model: type[ModelT], obj_id: int) -> ModelT:
-    obj = db.get(model, obj_id)
-    if obj is None:
-        raise HTTPException(status_code=404, detail=f"{model.__name__} {obj_id} not found")
-    return obj
-
 
 # ---- Skills ----
 
@@ -59,12 +49,12 @@ def create_skill(payload: SkillCreate, db: Session = Depends(get_db)) -> Skill:
 
 @router.get("/skills/{skill_id}", response_model=SkillRead)
 def get_skill(skill_id: int, db: Session = Depends(get_db)) -> Skill:
-    return _get_or_404(db, Skill, skill_id)
+    return get_or_404(db, Skill, skill_id)
 
 
 @router.patch("/skills/{skill_id}", response_model=SkillRead)
 def update_skill(skill_id: int, payload: SkillUpdate, db: Session = Depends(get_db)) -> Skill:
-    skill = _get_or_404(db, Skill, skill_id)
+    skill = get_or_404(db, Skill, skill_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(skill, field, value)
     db.commit()
@@ -74,7 +64,7 @@ def update_skill(skill_id: int, payload: SkillUpdate, db: Session = Depends(get_
 
 @router.delete("/skills/{skill_id}", status_code=204)
 def delete_skill(skill_id: int, db: Session = Depends(get_db)) -> None:
-    skill = _get_or_404(db, Skill, skill_id)
+    skill = get_or_404(db, Skill, skill_id)
     db.delete(skill)
     db.commit()
 
@@ -100,14 +90,14 @@ def create_experience_entry(
 
 @router.get("/experience-entries/{entry_id}", response_model=ExperienceEntryRead)
 def get_experience_entry(entry_id: int, db: Session = Depends(get_db)) -> ExperienceEntry:
-    return _get_or_404(db, ExperienceEntry, entry_id)
+    return get_or_404(db, ExperienceEntry, entry_id)
 
 
 @router.patch("/experience-entries/{entry_id}", response_model=ExperienceEntryRead)
 def update_experience_entry(
     entry_id: int, payload: ExperienceEntryUpdate, db: Session = Depends(get_db)
 ) -> ExperienceEntry:
-    entry = _get_or_404(db, ExperienceEntry, entry_id)
+    entry = get_or_404(db, ExperienceEntry, entry_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(entry, field, value)
     db.commit()
@@ -117,7 +107,7 @@ def update_experience_entry(
 
 @router.delete("/experience-entries/{entry_id}", status_code=204)
 def delete_experience_entry(entry_id: int, db: Session = Depends(get_db)) -> None:
-    entry = _get_or_404(db, ExperienceEntry, entry_id)
+    entry = get_or_404(db, ExperienceEntry, entry_id)
     db.delete(entry)
     db.commit()
 
@@ -141,14 +131,14 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)) -> Pro
 
 @router.get("/projects/{project_id}", response_model=ProjectRead)
 def get_project(project_id: int, db: Session = Depends(get_db)) -> Project:
-    return _get_or_404(db, Project, project_id)
+    return get_or_404(db, Project, project_id)
 
 
 @router.patch("/projects/{project_id}", response_model=ProjectRead)
 def update_project(
     project_id: int, payload: ProjectUpdate, db: Session = Depends(get_db)
 ) -> Project:
-    project = _get_or_404(db, Project, project_id)
+    project = get_or_404(db, Project, project_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(project, field, value)
     db.commit()
@@ -158,7 +148,7 @@ def update_project(
 
 @router.delete("/projects/{project_id}", status_code=204)
 def delete_project(project_id: int, db: Session = Depends(get_db)) -> None:
-    project = _get_or_404(db, Project, project_id)
+    project = get_or_404(db, Project, project_id)
     db.delete(project)
     db.commit()
 
@@ -184,14 +174,14 @@ def create_education_entry(
 
 @router.get("/education-entries/{entry_id}", response_model=EducationEntryRead)
 def get_education_entry(entry_id: int, db: Session = Depends(get_db)) -> EducationEntry:
-    return _get_or_404(db, EducationEntry, entry_id)
+    return get_or_404(db, EducationEntry, entry_id)
 
 
 @router.patch("/education-entries/{entry_id}", response_model=EducationEntryRead)
 def update_education_entry(
     entry_id: int, payload: EducationEntryUpdate, db: Session = Depends(get_db)
 ) -> EducationEntry:
-    entry = _get_or_404(db, EducationEntry, entry_id)
+    entry = get_or_404(db, EducationEntry, entry_id)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(entry, field, value)
     db.commit()
@@ -201,7 +191,7 @@ def update_education_entry(
 
 @router.delete("/education-entries/{entry_id}", status_code=204)
 def delete_education_entry(entry_id: int, db: Session = Depends(get_db)) -> None:
-    entry = _get_or_404(db, EducationEntry, entry_id)
+    entry = get_or_404(db, EducationEntry, entry_id)
     db.delete(entry)
     db.commit()
 
@@ -225,12 +215,12 @@ def create_bullet(payload: BulletCreate, db: Session = Depends(get_db)) -> Bulle
 
 @router.get("/bullets/{bullet_id}", response_model=BulletRead)
 def get_bullet(bullet_id: int, db: Session = Depends(get_db)) -> Bullet:
-    return _get_or_404(db, Bullet, bullet_id)
+    return get_or_404(db, Bullet, bullet_id)
 
 
 @router.patch("/bullets/{bullet_id}", response_model=BulletRead)
 def update_bullet(bullet_id: int, payload: BulletUpdate, db: Session = Depends(get_db)) -> Bullet:
-    bullet = _get_or_404(db, Bullet, bullet_id)
+    bullet = get_or_404(db, Bullet, bullet_id)
     updates = payload.model_dump(exclude_unset=True)
     merged = {
         "experience_entry_id": bullet.experience_entry_id,
@@ -254,7 +244,7 @@ def update_bullet(bullet_id: int, payload: BulletUpdate, db: Session = Depends(g
 
 @router.delete("/bullets/{bullet_id}", status_code=204)
 def delete_bullet(bullet_id: int, db: Session = Depends(get_db)) -> None:
-    bullet = _get_or_404(db, Bullet, bullet_id)
+    bullet = get_or_404(db, Bullet, bullet_id)
     db.delete(bullet)
     db.commit()
 
