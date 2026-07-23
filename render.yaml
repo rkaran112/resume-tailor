@@ -1,0 +1,55 @@
+# Render Blueprint — one-click deploy of resume-tailor.
+#
+#   Postgres (free)  ->  API (FastAPI, Docker, migrations on boot)  ->  static React frontend
+#
+# Deploy: in the Render dashboard, New + -> Blueprint -> pick this repo.
+#
+# Note on the free Postgres plan: Render deletes free databases 90 days after
+# creation and suspends them after ~30 days idle. For a permanent resume link,
+# change the database plan to a paid tier. PDF export is disabled here (its
+# Chromium browser is too heavy for the free web instance) — see Dockerfile.
+databases:
+  - name: resume-tailor-db
+    plan: free
+    databaseName: resume_tailor
+    user: resume_tailor
+
+services:
+  # --- API ---
+  - type: web
+    name: resume-tailor-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free              # sleeps after ~15 min idle; bump to "starter" to stay warm
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resume-tailor-db
+          property: connectionString
+      # No cookies/credentials are used, so a wildcard origin is safe and
+      # avoids a build-order dependency on the frontend URL. (JSON list — the
+      # settings field is a list[str].)
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      # LLM + import features stay off (no Anthropic key wired); the app runs
+      # fully without them.
+
+  # --- Frontend (static React build on Render's CDN — free, never sleeps) ---
+  - type: web
+    name: resume-tailor-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # Full origin of the API above; the client appends /api itself. Pinned to
+      # the literal onrender.com URL because Render's fromService injects only a
+      # bare host. Update if you rename the API service or add a custom domain.
+      - key: VITE_API_BASE_URL
+        value: https://resume-tailor-api.onrender.com
+    routes:
+      - type: rewrite       # SPA fallback
+        source: /*
+        destination: /index.html
