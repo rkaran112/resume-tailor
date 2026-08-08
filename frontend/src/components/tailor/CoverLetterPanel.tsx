@@ -7,6 +7,7 @@ import {
   useUpdateCoverLetter,
   type CoverLetter,
 } from '../../api/coverLetters'
+import { ProgressActivity } from '../ui/ProgressActivity'
 
 interface CoverLetterPanelProps {
   tailoredResumeId: number
@@ -44,17 +45,31 @@ export function CoverLetterPanel({ tailoredResumeId, onFinalized }: CoverLetterP
 
   const disabledMessage =
     create.error instanceof ApiError && create.error.status === 503
-      ? 'Cover letter generation is disabled on this server.'
+      ? 'Cover letters are turned off on this server. Set ENABLE_COVER_LETTER=true and an ' +
+        'ANTHROPIC_API_KEY in the backend .env file, then restart the server.'
       : null
 
   return (
     <div>
-      <h2>Cover Letter (opt-in)</h2>
-
       {!coverLetter && (
-        <button onClick={handleGenerate} disabled={create.isPending}>
-          {create.isPending ? 'Generating…' : 'Generate cover letter draft'}
-        </button>
+        <>
+          <p style={{ fontSize: 13.5, marginTop: 0 }}>
+            Drafts a short letter from your tailored resume and the job listing. You edit it, then
+            make the PDF — it never goes out without you reading it.
+          </p>
+          <button className="btn-primary" onClick={handleGenerate} disabled={create.isPending}>
+            {create.isPending ? 'Writing draft…' : 'Draft a cover letter'}
+          </button>
+          {create.isPending && (
+            <ProgressActivity
+              messages={[
+                'Reading your resume and the job…',
+                'Drafting your letter…',
+                'Almost there…',
+              ]}
+            />
+          )}
+        </>
       )}
       {disabledMessage && <p className="error">{disabledMessage}</p>}
       {create.isError && !disabledMessage && <p className="error">{create.error.message}</p>}
@@ -71,8 +86,8 @@ export function CoverLetterPanel({ tailoredResumeId, onFinalized }: CoverLetterP
             <button onClick={handleSaveEdit} disabled={update.isPending}>
               {update.isPending ? 'Saving…' : 'Save edits'}
             </button>
-            <button onClick={handleFinalize} disabled={finalize.isPending}>
-              {finalize.isPending ? 'Finalizing…' : 'Finalize cover letter'}
+            <button className="btn-primary" onClick={handleFinalize} disabled={finalize.isPending}>
+              {finalize.isPending ? 'Making PDF…' : 'Make the PDF'}
             </button>
           </div>
           {update.isError && <p className="error">{update.error.message}</p>}
@@ -82,16 +97,14 @@ export function CoverLetterPanel({ tailoredResumeId, onFinalized }: CoverLetterP
 
       {coverLetter && coverLetter.status === 'finalized' && (
         <div>
-          <p>Cover letter finalized.</p>
+          <p>Cover letter ready.</p>
           <a href={`${API_BASE_URL}/cover-letters/${coverLetter.id}/download`} download>
             Download {coverLetter.rendered_filename}
           </a>
           {preview.data && (
-            <iframe
-              title="Cover letter preview"
-              srcDoc={preview.data}
-              style={{ width: '100%', height: '800px', border: '1px solid var(--border)' }}
-            />
+            <div className="preview-frame" style={{ maxWidth: 420 }}>
+              <iframe title="Cover letter preview" srcDoc={preview.data} />
+            </div>
           )}
         </div>
       )}

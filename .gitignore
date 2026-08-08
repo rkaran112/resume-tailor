@@ -27,3 +27,6 @@ Thumbs.db
 scratch/
 generated/
 .gstack/
+
+# Dev server logs
+*.log

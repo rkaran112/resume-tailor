@@ -1,5 +1,13 @@
-export const API_BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api'
+// The base URL must include the `/api` prefix that every router is mounted
+// under. Accept it with or without a trailing `/api` (and with or without a
+// trailing slash) so a env value like `http://localhost:8010` still resolves —
+// otherwise every request 404s with `{"detail":"Not Found"}`.
+function resolveApiBaseUrl(): string {
+  const raw = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api').replace(/\/+$/, '')
+  return raw.endsWith('/api') ? raw : `${raw}/api`
+}
+
+export const API_BASE_URL: string = resolveApiBaseUrl()
 
 export class ApiError extends Error {
   status: number

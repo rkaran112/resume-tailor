@@ -33,10 +33,9 @@ export function ProjectForm() {
     <form onSubmit={handleSubmit}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
       <input
-        placeholder="Description"
+        placeholder="Description (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        required
       />
       <input
         placeholder="Tech tags (comma-separated)"
@@ -44,7 +43,7 @@ export function ProjectForm() {
         onChange={(e) => setTechTags(e.target.value)}
       />
       <input placeholder="Link" value={link} onChange={(e) => setLink(e.target.value)} />
-      <button type="submit" disabled={create.isPending}>
+      <button className="btn-primary" type="submit" disabled={create.isPending}>
         Add project
       </button>
       {create.isError && <span className="error">{create.error.message}</span>}

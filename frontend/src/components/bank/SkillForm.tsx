@@ -30,17 +30,16 @@ export function SkillForm() {
     <form onSubmit={handleSubmit}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
       <input
-        placeholder="Category"
+        placeholder="Category (optional)"
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        required
       />
       <input
         placeholder="Tags (comma-separated)"
         value={tags}
         onChange={(e) => setTags(e.target.value)}
       />
-      <button type="submit" disabled={create.isPending}>
+      <button className="btn-primary" type="submit" disabled={create.isPending}>
         Add skill
       </button>
       {create.isError && <span className="error">{create.error.message}</span>}

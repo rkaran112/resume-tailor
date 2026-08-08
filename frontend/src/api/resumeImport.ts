@@ -19,6 +19,7 @@ export interface ImportedBullet {
   text: string
   tags: string[]
   include: boolean
+  already_exists: boolean
 }
 
 export interface ImportedExperienceEntry {
@@ -29,6 +30,7 @@ export interface ImportedExperienceEntry {
   end_date: string | null
   bullets: ImportedBullet[]
   include: boolean
+  already_exists: boolean
 }
 
 export interface ImportedSkill {
@@ -36,6 +38,7 @@ export interface ImportedSkill {
   category: string
   tags: string[]
   include: boolean
+  already_exists: boolean
 }
 
 export interface ImportedProject {
@@ -44,6 +47,7 @@ export interface ImportedProject {
   tech_tags: string[]
   bullets: ImportedBullet[]
   include: boolean
+  already_exists: boolean
 }
 
 export interface ImportedEducationEntry {
@@ -52,7 +56,9 @@ export interface ImportedEducationEntry {
   field: string
   start_date: string
   end_date: string | null
+  gpa: string
   include: boolean
+  already_exists: boolean
 }
 
 export interface ResumeImportPreview {

@@ -245,6 +245,36 @@ finalized `TailoredResume` and optional `CoverLetter` to an `Application`, with 
 
 All 8 slices of the resume-tailor V1 build are now complete.
 
+**Post-V1: LaTeX import + duplicate detection + inline editing (done).** Extends Slice 8 along
+three axes, all still behind `ENABLE_RESUME_IMPORT` — no new feature flag. `app/services/
+resume_import.py` gained `extract_bank_data_from_latex()`, sharing the guardrailed system prompt
+and JSON-schema-constrained response parsing with `extract_bank_data()` via a private
+`_run_extraction()` helper; a `.tex` source is sent as a plain text block (not a `document`
+block) with a LaTeX-specific prompt addendum instructing the model to ignore the preamble/
+comments/macros and extract only literal rendered content. `app/api/routes/resume_import.py`
+now detects PDF vs. LaTeX by filename extension (not the unreliable browser-set `content_type`
+header), with a `%PDF-` magic-byte check as defense-in-depth on the PDF path. A new
+`mark_duplicates()` (pure function, no DB access itself — mirrors `matching.py`'s convention of
+taking already-loaded model sequences) flags every non-contact preview item as `already_exists`
+via deterministic case-insensitive text matching against the current bank (skill by name,
+experience by company+title, bullet by text, project by name, education by institution+degree);
+duplicates default `include=False`, genuinely new items default `include=True`. This is still
+just a smarter *preview*, not a merge — commit still only ever inserts new rows (per the
+Slice 8 note above), so re-checking a duplicate parent to keep a newly-found nested bullet
+recreates a redundant parent row; the frontend copy calls this out rather than silently
+under-building a real merge-on-commit feature. `ResumeImportPreview`'s per-item schemas gained
+`already_exists: bool` (not on `ImportedContact`, which stays a singleton-upsert with no dedup
+concept) and `ImportedEducationEntry` gained `gpa: str` (a pre-existing gap — `EducationEntry.
+gpa` existed on the DB model but was never wired into import extraction at all). Frontend
+`ResumeImportPanel.tsx` replaced every read-only preview field with an editable input (via a
+generic `updateListItem`-style helper mirroring the existing `toggle*` immutable-update pattern)
+and renders `.pill-success`/`.pill-neutral` "New" / "Already in your bank" badges per item.
+Verified via 17 tests in `tests/test_resume_import.py` (LaTeX content-block shape, `.tex` upload
+acceptance + non-tex/non-pdf/bad-magic-bytes rejection, `mark_duplicates` unit tests per entity
+type, and one route-level integration test seeding real case-differently-cased bank rows through
+the test DB and asserting the dedup flags end to end) plus the full 84-test suite, `ruff`/`mypy`,
+frontend `lint`/`build`, and a manual browser check of the `.tex` upload path.
+
 Standing quality gate across every slice: `ruff check .` + `mypy app` + `uv run pytest` (real
 Postgres via docker-compose) — set up in `.github/workflows/ci.yml` from Slice 1, not
 retrofitted later.

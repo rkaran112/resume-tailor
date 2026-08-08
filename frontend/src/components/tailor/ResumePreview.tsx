@@ -1,4 +1,5 @@
 import { useTailoredResumePreview } from '../../api/tailoring'
+import { PagePreviewSkeleton } from '../ui/Skeleton'
 
 interface ResumePreviewProps {
   tailoredResumeId: number
@@ -7,14 +8,12 @@ interface ResumePreviewProps {
 export function ResumePreview({ tailoredResumeId }: ResumePreviewProps) {
   const { data: html, isLoading, error } = useTailoredResumePreview(tailoredResumeId)
 
-  if (isLoading) return <p>Loading preview…</p>
+  if (isLoading) return <PagePreviewSkeleton />
   if (error) return <p className="error">{error.message}</p>
 
   return (
-    <iframe
-      title="Resume preview"
-      srcDoc={html}
-      style={{ width: '100%', height: '800px', border: '1px solid var(--border)' }}
-    />
+    <div className="preview-frame">
+      <iframe title="Resume preview" srcDoc={html} />
+    </div>
   )
 }

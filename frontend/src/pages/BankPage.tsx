@@ -8,9 +8,9 @@ import { ExperienceForm } from '../components/bank/ExperienceForm'
 import { ExperienceList } from '../components/bank/ExperienceList'
 import { ProjectForm } from '../components/bank/ProjectForm'
 import { ProjectList } from '../components/bank/ProjectList'
-import { ResumeImportPanel } from '../components/bank/ResumeImportPanel'
 import { SkillForm } from '../components/bank/SkillForm'
 import { SkillList } from '../components/bank/SkillList'
+import { TitleMark } from '../components/motion/TitleMark'
 
 const TABS = [
   'Skills',
@@ -18,66 +18,56 @@ const TABS = [
   'Projects',
   'Bullets',
   'Education',
-  'Contact Info',
+  'Contact',
 ] as const
 type Tab = (typeof TABS)[number]
+
+const ADD_LABEL: Record<Tab, string> = {
+  Skills: 'Add a skill',
+  Experience: 'Add a role',
+  Projects: 'Add a project',
+  Bullets: 'Add a bullet',
+  Education: 'Add education',
+  Contact: 'Your contact details',
+}
 
 export function BankPage() {
   const [tab, setTab] = useState<Tab>('Skills')
 
   return (
     <div>
-      <h1>Resume Tailor — Bank</h1>
-      <ResumeImportPanel />
-      <nav>
-        {TABS.map((t) => (
-          <button key={t} aria-current={tab === t} onClick={() => setTab(t)}>
-            {t}
-          </button>
-        ))}
-      </nav>
+      <TitleMark as="h1">Bank</TitleMark>
+      <p className="page-intro">
+        Type it in once, edit any row later. Tailor pulls from here.
+      </p>
 
-      {tab === 'Skills' && (
-        <section>
-          <h2>Skills</h2>
-          <SkillForm />
-          <SkillList />
-        </section>
-      )}
-      {tab === 'Experience' && (
-        <section>
-          <h2>Experience</h2>
-          <ExperienceForm />
-          <ExperienceList />
-        </section>
-      )}
-      {tab === 'Projects' && (
-        <section>
-          <h2>Projects</h2>
-          <ProjectForm />
-          <ProjectList />
-        </section>
-      )}
-      {tab === 'Bullets' && (
-        <section>
-          <h2>Bullets</h2>
-          <BulletForm />
-          <BulletList />
-        </section>
-      )}
-      {tab === 'Education' && (
-        <section>
-          <h2>Education</h2>
-          <EducationForm />
-          <EducationList />
-        </section>
-      )}
-      {tab === 'Contact Info' && (
-        <section>
-          <h2>Contact Info</h2>
-          <ContactInfoForm />
-        </section>
-      )}
+      <div className="bank-tabs">
+        <nav>
+          {TABS.map((t) => (
+            <button key={t} aria-current={tab === t} onClick={() => setTab(t)}>
+              {t}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <section>
+        <div className="composer">
+          <div className="composer-title">{ADD_LABEL[tab]}</div>
+          {tab === 'Skills' && <SkillForm />}
+          {tab === 'Experience' && <ExperienceForm />}
+          {tab === 'Projects' && <ProjectForm />}
+          {tab === 'Bullets' && <BulletForm />}
+          {tab === 'Education' && <EducationForm />}
+          {tab === 'Contact' && <ContactInfoForm />}
+        </div>
+
+        {tab === 'Skills' && <SkillList />}
+        {tab === 'Experience' && <ExperienceList />}
+        {tab === 'Projects' && <ProjectList />}
+        {tab === 'Bullets' && <BulletList />}
+        {tab === 'Education' && <EducationList />}
+      </section>
     </div>
   )
 }

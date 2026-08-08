@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 import app.models  # noqa: F401 -- register models on Base.metadata
+from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
@@ -25,6 +26,20 @@ def _create_schema() -> Generator[None, None, None]:
     Base.metadata.create_all(engine)
     yield
     Base.metadata.drop_all(engine)
+
+
+@pytest.fixture(autouse=True)
+def _default_feature_flags(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    """Pin feature flags to their shipped defaults so a developer's local .env
+    (which typically enables them) can't change test behavior. Env vars take
+    precedence over the .env file in pydantic-settings."""
+    monkeypatch.setenv("ENABLE_RESUME_IMPORT", "false")
+    monkeypatch.setenv("ENABLE_LLM_ENHANCE", "false")
+    monkeypatch.setenv("ENABLE_COVER_LETTER", "false")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture(autouse=True)

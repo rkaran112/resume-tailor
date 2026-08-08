@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -11,27 +13,62 @@ from app.models.experience import ExperienceEntry
 from app.models.project import Project
 from app.models.skill import Skill
 from app.schemas.resume_import import ResumeImportCommitResult, ResumeImportPreview
-from app.services.resume_import import extract_bank_data
+from app.services.resume_import import (
+    extract_bank_data,
+    extract_bank_data_from_latex,
+    mark_duplicates,
+)
 
 router = APIRouter(tags=["resume-import"])
 
 _MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
+def _detect_import_kind(filename: str | None) -> str:
+    suffix = Path(filename or "").suffix.lower()
+    if suffix == ".pdf":
+        return "pdf"
+    if suffix == ".tex":
+        return "latex"
+    raise HTTPException(status_code=400, detail="Only PDF or LaTeX (.tex) files are supported")
+
+
 @router.post("/bank/import", response_model=ResumeImportPreview)
-async def import_resume(file: UploadFile = File(...)) -> ResumeImportPreview:
+async def import_resume(
+    file: UploadFile = File(...), db: Session = Depends(get_db)
+) -> ResumeImportPreview:
     if not get_settings().enable_resume_import:
         raise HTTPException(status_code=503, detail="Resume import is disabled")
 
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    kind = _detect_import_kind(file.filename)
 
-    pdf_bytes = await file.read()
-    if len(pdf_bytes) > _MAX_UPLOAD_BYTES:
+    raw_bytes = await file.read()
+    if len(raw_bytes) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds the 10 MB upload limit")
 
-    extracted = extract_bank_data(pdf_bytes)
-    return ResumeImportPreview.model_validate(extracted)
+    if kind == "pdf":
+        if not raw_bytes.startswith(b"%PDF-"):
+            raise HTTPException(status_code=400, detail="File does not look like a valid PDF")
+        extracted = extract_bank_data(raw_bytes)
+    else:
+        try:
+            latex_source = raw_bytes.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise HTTPException(
+                status_code=400, detail="LaTeX file must be UTF-8 encoded"
+            ) from exc
+        extracted = extract_bank_data_from_latex(latex_source)
+
+    preview = ResumeImportPreview.model_validate(extracted)
+    mark_duplicates(
+        preview,
+        existing_skills=db.query(Skill).all(),
+        existing_experience_entries=db.query(ExperienceEntry).all(),
+        existing_bullets=db.query(Bullet).all(),
+        existing_projects=db.query(Project).all(),
+        existing_education_entries=db.query(EducationEntry).all(),
+    )
+    return preview
 
 
 @router.post("/bank/import/commit", response_model=ResumeImportCommitResult)
@@ -110,6 +147,7 @@ def commit_resume_import(
                 field=edu_entry.field,
                 start_date=edu_entry.start_date,
                 end_date=edu_entry.end_date,
+                gpa=edu_entry.gpa or None,
             )
         )
         education_entries_created += 1

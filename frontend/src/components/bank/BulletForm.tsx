@@ -74,7 +74,7 @@ export function BulletForm() {
         value={impactMetric}
         onChange={(e) => setImpactMetric(e.target.value)}
       />
-      <button type="submit" disabled={create.isPending}>
+      <button className="btn-primary" type="submit" disabled={create.isPending}>
         Add bullet
       </button>
       {create.isError && <span className="error">{create.error.message}</span>}

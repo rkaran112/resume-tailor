@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useContactInfo, useUpsertContactInfo, type ContactLink } from '../../api/bank'
 
 export function ContactInfoForm() {
-  const { data, isLoading } = useContactInfo()
+  const { data } = useContactInfo()
   const upsert = useUpsertContactInfo()
 
   const [name, setName] = useState('')
@@ -36,8 +36,6 @@ export function ContactInfoForm() {
     upsert.mutate({ name, email, phone, location, links: parseLinks() })
   }
 
-  if (isLoading) return <p>Loading…</p>
-
   return (
     <form onSubmit={handleSubmit}>
       <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -48,16 +46,14 @@ export function ContactInfoForm() {
         required
       />
       <input
-        placeholder="Phone"
+        placeholder="Phone (optional)"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        required
       />
       <input
-        placeholder="Location"
+        placeholder="Location (optional)"
         value={location}
         onChange={(e) => setLocation(e.target.value)}
-        required
       />
       <textarea
         placeholder="Links, one per line as label=url"
@@ -65,7 +61,7 @@ export function ContactInfoForm() {
         onChange={(e) => setLinksText(e.target.value)}
         rows={3}
       />
-      <button type="submit" disabled={upsert.isPending}>
+      <button className="btn-primary" type="submit" disabled={upsert.isPending}>
         Save contact info
       </button>
       {upsert.isError && <span className="error">{upsert.error.message}</span>}

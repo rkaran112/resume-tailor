@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useCreateApplication } from '../../api/applications'
 import { API_BASE_URL } from '../../api/client'
 import { useFinalizeTailoredResume, type JobDescription, type TailoredResume } from '../../api/tailoring'
+import { ProgressActivity } from '../ui/ProgressActivity'
 
 interface ExportControlsProps {
   tailoredResumeId: number
@@ -40,9 +41,19 @@ export function ExportControls({
 
   return (
     <div>
-      <button onClick={handleFinalize} disabled={finalize.isPending || finalized !== null}>
-        {finalize.isPending ? 'Finalizing…' : finalized ? 'Finalized' : 'Finalize'}
+      <h2>Finish &amp; download</h2>
+      <button
+        className="btn-primary"
+        onClick={handleFinalize}
+        disabled={finalize.isPending || finalized !== null}
+      >
+        {finalize.isPending ? 'Making PDF…' : finalized ? 'PDF ready' : 'Make the PDF'}
       </button>
+      {finalize.isPending && (
+        <ProgressActivity
+          messages={['Laying out your resume…', 'Rendering the PDF…', 'Almost there…']}
+        />
+      )}
       {finalize.isError && <span className="error">{finalize.error.message}</span>}
       {finalized && (
         <a href={`${API_BASE_URL}/tailored-resumes/${tailoredResumeId}/download`} download>
@@ -61,12 +72,12 @@ export function ExportControls({
               required
             />
           </label>
-          <button type="submit" disabled={createApplication.isPending}>
-            Log this application
+          <button className="btn-primary" type="submit" disabled={createApplication.isPending}>
+            Save to Track
           </button>
         </form>
       )}
-      {loggedApplicationId !== null && <p>Application logged — see the Applications tab.</p>}
+      {loggedApplicationId !== null && <p>Saved — find it under the Track tab.</p>}
     </div>
   )
 }

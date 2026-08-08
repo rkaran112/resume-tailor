@@ -21,6 +21,7 @@ class ImportedBullet(BaseModel):
     text: str
     tags: list[str] = []
     include: bool = True
+    already_exists: bool = False
 
 
 class ImportedExperienceEntry(BaseModel):
@@ -31,6 +32,7 @@ class ImportedExperienceEntry(BaseModel):
     end_date: date | None = None
     bullets: list[ImportedBullet] = []
     include: bool = True
+    already_exists: bool = False
 
 
 class ImportedSkill(BaseModel):
@@ -38,6 +40,7 @@ class ImportedSkill(BaseModel):
     category: str
     tags: list[str] = []
     include: bool = True
+    already_exists: bool = False
 
 
 class ImportedProject(BaseModel):
@@ -46,6 +49,7 @@ class ImportedProject(BaseModel):
     tech_tags: list[str] = []
     bullets: list[ImportedBullet] = []
     include: bool = True
+    already_exists: bool = False
 
 
 class ImportedEducationEntry(BaseModel):
@@ -54,7 +58,9 @@ class ImportedEducationEntry(BaseModel):
     field: str
     start_date: date
     end_date: date | None = None
+    gpa: str = ""
     include: bool = True
+    already_exists: bool = False
 
 
 class ResumeImportPreview(BaseModel):

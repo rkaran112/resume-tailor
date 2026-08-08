@@ -5,6 +5,7 @@ import {
   useEnhanceBullets,
   type EnhancedBullet,
 } from '../../api/tailoring'
+import { ProgressActivity } from '../ui/ProgressActivity'
 
 interface LLMEnhancePanelProps {
   tailoredResumeId: number
@@ -48,26 +49,39 @@ export function LLMEnhancePanel({ tailoredResumeId }: LLMEnhancePanelProps) {
 
   const disabledMessage =
     enhance.error instanceof ApiError && enhance.error.status === 503
-      ? 'LLM bullet enhancement is disabled on this server.'
+      ? 'Wording polish is turned off on this server. Set ENABLE_LLM_ENHANCE=true and an ' +
+        'ANTHROPIC_API_KEY in the backend .env file, then restart the server.'
       : null
 
   return (
     <div>
-      <h2>LLM Bullet Enhancement (opt-in)</h2>
-      <button onClick={handleEnhance} disabled={enhance.isPending}>
-        {enhance.isPending ? 'Enhancing…' : 'Suggest rewrites'}
+      <p style={{ fontSize: 13.5, marginTop: 0 }}>
+        Ask AI to tighten your chosen bullets. Every suggestion appears next to the original, and
+        nothing changes unless you check it and apply.
+      </p>
+      <button className="btn-primary" onClick={handleEnhance} disabled={enhance.isPending}>
+        {enhance.isPending ? 'Writing suggestions…' : 'Suggest rewrites'}
       </button>
+      {enhance.isPending && (
+        <ProgressActivity
+          messages={[
+            'Reading your chosen bullets…',
+            'Drafting tighter wording…',
+            'Almost there…',
+          ]}
+        />
+      )}
       {disabledMessage && <p className="error">{disabledMessage}</p>}
       {enhance.isError && !disabledMessage && (
         <p className="error">{enhance.error.message}</p>
       )}
 
-      {suggestions && suggestions.length === 0 && <p>No bullets to enhance.</p>}
+      {suggestions && suggestions.length === 0 && <p>No bullets to polish.</p>}
 
       {suggestions && suggestions.length > 0 && (
         <div>
           {suggestions.map((suggestion) => (
-            <div key={suggestion.bullet_id} style={{ marginBottom: 10 }}>
+            <div key={suggestion.bullet_id} className="card" style={{ marginBottom: 10 }}>
               <label>
                 <input
                   type="checkbox"
@@ -75,15 +89,21 @@ export function LLMEnhancePanel({ tailoredResumeId }: LLMEnhancePanelProps) {
                   onChange={() => toggle(suggestion.bullet_id)}
                 />
                 {suggestion.flagged && (
-                  <span className="error"> large change — review carefully</span>
+                  <span className="pill pill-warning"> big change — read closely</span>
                 )}
               </label>
-              <div style={{ color: 'gray' }}>Original: {suggestion.original}</div>
-              <div>Suggested: {suggestion.suggested}</div>
+              <div style={{ color: 'var(--ink-faint)', fontSize: 13 }}>
+                Original: {suggestion.original}
+              </div>
+              <div style={{ fontSize: 13.5 }}>Suggested: {suggestion.suggested}</div>
             </div>
           ))}
-          <button onClick={handleApply} disabled={accept.isPending || acceptedIds.size === 0}>
-            Apply accepted rewrites
+          <button
+            className="btn-primary"
+            onClick={handleApply}
+            disabled={accept.isPending || acceptedIds.size === 0}
+          >
+            Apply checked rewrites
           </button>
         </div>
       )}

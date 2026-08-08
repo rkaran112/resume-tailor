@@ -47,10 +47,9 @@ export function EducationForm() {
         required
       />
       <input
-        placeholder="Field"
+        placeholder="Field (optional)"
         value={field}
         onChange={(e) => setField(e.target.value)}
-        required
       />
       <input
         type="date"
@@ -60,7 +59,7 @@ export function EducationForm() {
       />
       <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       <input placeholder="GPA" value={gpa} onChange={(e) => setGpa(e.target.value)} />
-      <button type="submit" disabled={create.isPending}>
+      <button className="btn-primary" type="submit" disabled={create.isPending}>
         Add education
       </button>
       {create.isError && <span className="error">{create.error.message}</span>}

@@ -44,10 +44,9 @@ export function ExperienceForm() {
         required
       />
       <input
-        placeholder="Location"
+        placeholder="Location (optional)"
         value={location}
         onChange={(e) => setLocation(e.target.value)}
-        required
       />
       <input
         type="date"
@@ -61,7 +60,7 @@ export function ExperienceForm() {
         value={endDate}
         onChange={(e) => setEndDate(e.target.value)}
       />
-      <button type="submit" disabled={create.isPending}>
+      <button className="btn-primary" type="submit" disabled={create.isPending}>
         Add experience
       </button>
       {create.isError && <span className="error">{create.error.message}</span>}

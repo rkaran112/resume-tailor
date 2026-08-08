@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { ApplicationStats } from '../components/applications/ApplicationStats'
 import { ApplicationTable } from '../components/applications/ApplicationTable'
+import { TitleMark } from '../components/motion/TitleMark'
 import { ApplicationDetailPage } from './ApplicationDetailPage'
 
 export function ApplicationsPage() {
@@ -11,7 +13,11 @@ export function ApplicationsPage() {
 
   return (
     <div>
-      <h1>Resume Tailor — Applications</h1>
+      <TitleMark as="h1">Track</TitleMark>
+      <p className="page-intro">
+        Every application you've sent — which resume went out, when, and where it stands now.
+      </p>
+      <ApplicationStats />
       <ApplicationTable onSelect={setSelectedId} />
     </div>
   )

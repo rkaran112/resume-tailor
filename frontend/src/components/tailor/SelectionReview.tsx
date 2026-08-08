@@ -49,17 +49,7 @@ function splitByMatch<T>(
 function RecommendedPill({ matched }: { matched: string[] | undefined }) {
   if (!matched || matched.length === 0) return null
   return (
-    <span
-      title={`Matched on: ${matched.join(', ')}`}
-      style={{
-        marginLeft: 6,
-        fontSize: 11,
-        color: '#0a7a2f',
-        background: '#e4f7e9',
-        borderRadius: 10,
-        padding: '1px 8px',
-      }}
-    >
+    <span className="pill pill-success" title={`Matched on: ${matched.join(', ')}`}>
       Recommended
     </span>
   )
@@ -160,12 +150,10 @@ export function SelectionReview({
 
   return (
     <div>
-      <h2>
-        Review selection for {jobDescription.company} — {jobDescription.role_title}
-      </h2>
+      <h2>Your best matches</h2>
       <p>
-        We pre-selected the best-matching content based on your job description — uncheck
-        anything you don't want, or expand "Show all" to add more from your bank.
+        These fit the {jobDescription.role_title} listing best. Untick anything you don't want,
+        or open "Show more" to add from the rest of your bank.
       </p>
 
       <h3>Experience</h3>
@@ -175,10 +163,10 @@ export function SelectionReview({
         )
         const { matched, unmatched } = splitByMatch(entryBullets, (b) => b.id, bulletMatches)
         return (
-          <div key={entry.id} style={{ marginBottom: 12 }}>
-            <strong>
+          <div key={entry.id} className="bullet-entry">
+            <div className="entry-title">
               {entry.company} — {entry.title}
-            </strong>
+            </div>
             <ul>
               {matched.map((bullet) => (
                 <BulletRow key={bullet.id} bullet={bullet} />
@@ -186,7 +174,9 @@ export function SelectionReview({
             </ul>
             {unmatched.length > 0 && (
               <details>
-                <summary>Show {unmatched.length} more bullet(s)</summary>
+                <summary>
+                  Show {unmatched.length} more {unmatched.length === 1 ? 'bullet' : 'bullets'}
+                </summary>
                 <ul>
                   {unmatched.map((bullet) => (
                     <BulletRow key={bullet.id} bullet={bullet} />
@@ -199,56 +189,62 @@ export function SelectionReview({
       })}
 
       <h3>Skills</h3>
-      <ul>
-        {matchedSkills.map((skill) => (
-          <SkillRow key={skill.id} skill={skill} />
-        ))}
-      </ul>
-      {unmatchedSkills.length > 0 && (
-        <details>
-          <summary>Show all skills ({unmatchedSkills.length} more)</summary>
-          <ul>
-            {unmatchedSkills.map((skill) => (
-              <SkillRow key={skill.id} skill={skill} />
-            ))}
-          </ul>
-        </details>
-      )}
+      <div className="bullet-entry">
+        <ul>
+          {matchedSkills.map((skill) => (
+            <SkillRow key={skill.id} skill={skill} />
+          ))}
+        </ul>
+        {unmatchedSkills.length > 0 && (
+          <details>
+            <summary>Show {unmatchedSkills.length} more skills</summary>
+            <ul>
+              {unmatchedSkills.map((skill) => (
+                <SkillRow key={skill.id} skill={skill} />
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
 
       <h3>Projects</h3>
-      <ul>
-        {matchedProjects.map((project) => (
-          <ProjectRow key={project.id} project={project} />
-        ))}
-      </ul>
-      {unmatchedProjects.length > 0 && (
-        <details>
-          <summary>Show all projects ({unmatchedProjects.length} more)</summary>
-          <ul>
-            {unmatchedProjects.map((project) => (
-              <ProjectRow key={project.id} project={project} />
-            ))}
-          </ul>
-        </details>
-      )}
+      <div className="bullet-entry">
+        <ul>
+          {matchedProjects.map((project) => (
+            <ProjectRow key={project.id} project={project} />
+          ))}
+        </ul>
+        {unmatchedProjects.length > 0 && (
+          <details>
+            <summary>Show {unmatchedProjects.length} more projects</summary>
+            <ul>
+              {unmatchedProjects.map((project) => (
+                <ProjectRow key={project.id} project={project} />
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
 
       <h3>Education</h3>
-      <ul>
-        {(educationEntries ?? []).map((entry) => (
-          <li key={entry.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedEducationIds.has(entry.id)}
-                onChange={() => toggleEducation(entry.id)}
-              />
-              {entry.institution} — {entry.degree}, {entry.field}
-            </label>
-          </li>
-        ))}
-      </ul>
+      <div className="bullet-entry">
+        <ul>
+          {(educationEntries ?? []).map((entry) => (
+            <li key={entry.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selectedEducationIds.has(entry.id)}
+                  onChange={() => toggleEducation(entry.id)}
+                />
+                {entry.institution} — {entry.degree}, {entry.field}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <button onClick={handleConfirm} disabled={isSubmitting}>
+      <button className="btn-primary" onClick={handleConfirm} disabled={isSubmitting}>
         {isSubmitting ? 'Creating draft…' : 'Create draft'}
       </button>
     </div>
