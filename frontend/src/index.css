@@ -504,8 +504,10 @@ button.wordmark:hover:not(:disabled) {
    iframe at its natural page width, then scale the whole thing down visually,
    the same technique design tools use for page thumbnails. */
 .preview-frame {
+  /* Always a white "page" regardless of app theme — this represents a
+     printed resume, not a themed app surface. */
   --preview-scale: 0.54;
-  background: var(--surface-raised);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 16px 32px -12px rgba(0, 0, 0, 0.18);
@@ -520,6 +522,8 @@ button.wordmark:hover:not(:disabled) {
   width: 816px;
   height: 1056px;
   border: none;
+  background: #ffffff;
+  color-scheme: light;
   position: absolute;
   top: 0;
   left: 0;
